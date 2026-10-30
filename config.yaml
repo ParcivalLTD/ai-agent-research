@@ -1,0 +1,191 @@
+# =============================================================================
+# AI Agent Research Infrastructure — Master Configuration Schema
+# =============================================================================
+# All fields shown are mandatory unless marked [optional].
+# Copy this file to config.yaml and fill in your values.
+# Environment variable substitution: use ${MY_VAR} syntax.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Global budget (shared across all projects)
+# ---------------------------------------------------------------------------
+global:
+  token_budget:
+    max_prompt_tokens: 2_000_000        # total prompt tokens per day
+    max_completion_tokens: 500_000      # total completion tokens per day
+    per_project_prompt_tokens: 200_000  # max per project per run
+    per_project_completion_tokens: 50_000
+
+  # LLM backend
+  llm:
+    provider: openai                    # openai | anthropic | watsonx
+    model: gpt-4o
+    api_key: ${OPENAI_API_KEY}          # or set in environment
+    timeout_seconds: 120
+
+  # Logging
+  logging:
+    log_dir: ./logs
+    level: INFO                         # DEBUG | INFO | WARNING | ERROR
+    rotate_after_mb: 50
+    retain_days: 30
+
+  # Daily report
+  report:
+    output_dir: ./reports
+    format: html                        # html | markdown | json
+
+# ---------------------------------------------------------------------------
+# Oracle endpoints
+# ---------------------------------------------------------------------------
+oracles:
+  lean4:
+    enabled: true
+    lean_bin: lean                      # path to lean binary or "lean"
+    timeout_seconds: 120
+
+  tlc:
+    enabled: true
+    tlc_jar: /opt/tla/tla2tools.jar    # absolute path to tla2tools.jar
+    java_bin: java
+    timeout_seconds: 300
+
+  z3:
+    enabled: true
+    use_python_api: true                # true = import z3; false = subprocess
+    timeout_seconds: 60
+
+  alive2:
+    enabled: false                      # [optional] set true if alive-tv installed
+    alive_tv_bin: alive-tv
+    timeout_seconds: 120
+
+# ---------------------------------------------------------------------------
+# Project registry
+# Run order is determined by `priority` (higher = first).
+# Each project must have a unique `project_id`.
+# ---------------------------------------------------------------------------
+projects:
+
+  - project_id: P7
+    priority: 7
+    enabled: true
+    class: projects.p7.Project7        # dotted Python import path
+    oracle: lean4
+    loop:
+      max_cycles: 20
+      convergence_score: 1.0
+      patience: 3
+      proposal_temperature: 0.7
+      diagnosis_temperature: 0.3
+    github:
+      repo: owner/repo                 # [optional]
+      token: ${GITHUB_TOKEN}
+    extra: {}                          # project-specific settings
+
+  - project_id: P1
+    priority: 6
+    enabled: true
+    class: projects.p1.Project1
+    oracle: z3
+    loop:
+      max_cycles: 15
+      convergence_score: 1.0
+      patience: 3
+      proposal_temperature: 0.8
+      diagnosis_temperature: 0.3
+    github:
+      repo: owner/repo
+      token: ${GITHUB_TOKEN}
+    extra: {}
+
+  - project_id: P2
+    priority: 5
+    enabled: true
+    class: projects.p2.Project2
+    oracle: tlc
+    loop:
+      max_cycles: 25
+      convergence_score: 1.0
+      patience: 4
+      proposal_temperature: 0.7
+      diagnosis_temperature: 0.2
+    extra: {}
+
+  - project_id: P3
+    priority: 4
+    enabled: true
+    class: projects.p3.Project3
+    oracle: lean4
+    loop:
+      max_cycles: 20
+      convergence_score: 1.0
+      patience: 3
+      proposal_temperature: 0.7
+      diagnosis_temperature: 0.3
+    extra: {}
+
+  - project_id: P4
+    priority: 3
+    enabled: true
+    class: projects.p4.Project4
+    oracle: z3
+    loop:
+      max_cycles: 15
+      convergence_score: 1.0
+      patience: 3
+      proposal_temperature: 0.6
+      diagnosis_temperature: 0.2
+    extra: {}
+
+  - project_id: P5
+    priority: 2
+    enabled: true
+    class: projects.p5.Project5
+    oracle: alive2
+    loop:
+      max_cycles: 12
+      convergence_score: 1.0
+      patience: 3
+      proposal_temperature: 0.7
+      diagnosis_temperature: 0.3
+    extra: {}
+
+  - project_id: P6
+    priority: 1
+    enabled: true
+    class: projects.p6.Project6
+    oracle: lean4
+    loop:
+      max_cycles: 20
+      convergence_score: 1.0
+      patience: 3
+      proposal_temperature: 0.7
+      diagnosis_temperature: 0.3
+    extra: {}
+
+  - project_id: P8
+    priority: 0
+    enabled: true
+    class: projects.p8.Project8
+    oracle: z3
+    loop:
+      max_cycles: 10
+      convergence_score: 1.0
+      patience: 2
+      proposal_temperature: 0.7
+      diagnosis_temperature: 0.3
+    extra: {}
+
+  - project_id: P9
+    priority: 0
+    enabled: true
+    class: projects.p9.Project9
+    oracle: tlc
+    loop:
+      max_cycles: 10
+      convergence_score: 1.0
+      patience: 2
+      proposal_temperature: 0.7
+      diagnosis_temperature: 0.3
+    extra: {}
