@@ -1,0 +1,156 @@
+; Alive2 verification units for the select+binop+const transformation.
+;
+; Transformation: select(cond, binop(x, C), x)  →  binop(x, select(cond, C, identity))
+;
+; Run with:
+;   alive-tv alive2_proof.txt
+;
+; Each verification unit is a Pre/Src/Tgt block.
+; Alive2 checks: ∀ inputs, Tgt refines Src (same result or less defined).
+;
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 1: add nsw — i32
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-add-nsw-i32
+Pre: true
+
+%add = add nsw i32 %x, %C
+%r = select i1 %cond, i32 %add, i32 %x
+=>
+%delta = select i1 %cond, i32 %C, i32 0
+%r = add nsw i32 %x, %delta
+
+; Safety argument:
+;   When %cond = true:  add nsw %x, %C (same as source).
+;   When %cond = false: add nsw %x, 0 = %x.  Source returns %x.
+;   nsw on add nsw %x, 0 cannot fire (0 never causes overflow).
+;   Poison behaviour: source had no binop on false path (returned %x directly),
+;   so the target must also be non-poison on the false path. add nsw %x, 0 is
+;   poison-free iff %x is poison-free — which is the same assumption as source.
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 2: add nuw — i32
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-add-nuw-i32
+Pre: true
+
+%add = add nuw i32 %x, %C
+%r = select i1 %cond, i32 %add, i32 %x
+=>
+%delta = select i1 %cond, i32 %C, i32 0
+%r = add nuw i32 %x, %delta
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 3: add nsw nuw — i32
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-add-nsw-nuw-i32
+Pre: true
+
+%add = add nsw nuw i32 %x, %C
+%r = select i1 %cond, i32 %add, i32 %x
+=>
+%delta = select i1 %cond, i32 %C, i32 0
+%r = add nsw nuw i32 %x, %delta
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 4: sub nsw — i32
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-sub-nsw-i32
+Pre: true
+
+%sub = sub nsw i32 %x, %C
+%r = select i1 %cond, i32 %sub, i32 %x
+=>
+%delta = select i1 %cond, i32 %C, i32 0
+%r = sub nsw i32 %x, %delta
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 5: sub nuw — i32
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-sub-nuw-i32
+Pre: true
+
+%sub = sub nuw i32 %x, %C
+%r = select i1 %cond, i32 %sub, i32 %x
+=>
+%delta = select i1 %cond, i32 %C, i32 0
+%r = sub nuw i32 %x, %delta
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 6: or — i32 (no overflow flags, always safe)
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-or-i32
+Pre: true
+
+%binop = or i32 %x, %C
+%r = select i1 %cond, i32 %binop, i32 %x
+=>
+%delta = select i1 %cond, i32 %C, i32 0
+%r = or i32 %x, %delta
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 7: xor — i32
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-xor-i32
+Pre: true
+
+%binop = xor i32 %x, %C
+%r = select i1 %cond, i32 %binop, i32 %x
+=>
+%delta = select i1 %cond, i32 %C, i32 0
+%r = xor i32 %x, %delta
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 8: add nsw — i64 (wider type)
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-add-nsw-i64
+Pre: true
+
+%add = add nsw i64 %x, %C
+%r = select i1 %cond, i64 %add, i64 %x
+=>
+%delta = select i1 %cond, i64 %C, i64 0
+%r = add nsw i64 %x, %delta
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Unit 9: add nsw — i8 (narrow type — common in byte arithmetic)
+; ─────────────────────────────────────────────────────────────────────────────
+
+Name: select-add-nsw-i8
+Pre: true
+
+%add = add nsw i8 %x, %C
+%r = select i1 %cond, i8 %add, i8 %x
+=>
+%delta = select i1 %cond, i8 %C, i8 0
+%r = add nsw i8 %x, %delta
+
+; ─────────────────────────────────────────────────────────────────────────────
+; Counterexample: add WITHOUT flags — NOT safe to transform
+;
+; When %cond = false the source returns %x without executing the add.
+; The target executes add %x, 0.  If %x = INT_MAX and we drop nsw, the add
+; wraps and the result is poison in the target but not in the source.
+; Alive2 SHOULD report UNSOUND for this case (included as documentation).
+; ─────────────────────────────────────────────────────────────────────────────
+
+; Name: select-add-no-flags-UNSOUND  (EXPECTED FAILURE — do not commit)
+; Pre: true
+;
+; %add = add i32 %x, %C          ; no nsw / nuw
+; %r = select i1 %cond, i32 %add, i32 %x
+; =>
+; %delta = select i1 %cond, i32 %C, i32 0
+; %r = add i32 %x, %delta        ; can wrap when cond=false, x wraps with 0 — NO
+;
+; This is commented out because alive-tv would (correctly) mark it UNSOUND.
+; The implementation guards against this by requiring hasOneUse AND
+; checking for nsw/nuw before applying the transformation for add/sub.
