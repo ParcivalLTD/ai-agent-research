@@ -1,0 +1,131 @@
+[
+  {
+    "name": "max2",
+    "description": "Maximum of two integers",
+    "inputs": ["x", "y"],
+    "examples": [
+      [0, 1, 1],
+      [3, 2, 3],
+      [-1, 0, 0],
+      [5, 5, 5],
+      [7, 3, 7]
+    ],
+    "expected_solution": "(ite (< x y) y x)"
+  },
+  {
+    "name": "abs",
+    "description": "Absolute value of x",
+    "inputs": ["x"],
+    "examples": [
+      [-3, 3],
+      [0, 0],
+      [4, 4],
+      [-1, 1]
+    ],
+    "expected_solution": "(ite (< x 0) (- 0 x) x)"
+  },
+  {
+    "name": "clamp",
+    "description": "Clamp x to the range [lo, hi]",
+    "inputs": ["x", "lo", "hi"],
+    "examples": [
+      [-5, 0, 10, 0],
+      [5, 0, 10, 5],
+      [15, 0, 10, 10],
+      [0, 0, 10, 0],
+      [10, 0, 10, 10]
+    ],
+    "expected_solution": "(ite (< x lo) lo (ite (> x hi) hi x))"
+  },
+  {
+    "name": "sign",
+    "description": "Sign of x: -1, 0, or 1",
+    "inputs": ["x"],
+    "examples": [
+      [-5, -1],
+      [0, 0],
+      [3, 1],
+      [-1, -1],
+      [100, 1]
+    ],
+    "expected_solution": "(ite (< x 0) (- 0 1) (ite (= x 0) 0 1))"
+  },
+  {
+    "name": "min3",
+    "description": "Minimum of three integers x, y, z",
+    "inputs": ["x", "y", "z"],
+    "examples": [
+      [1, 2, 3, 1],
+      [3, 1, 2, 1],
+      [2, 3, 1, 1],
+      [5, 5, 5, 5],
+      [-1, 0, 1, -1]
+    ],
+    "expected_solution": "(ite (< x y) (ite (< x z) x z) (ite (< y z) y z))"
+  },
+  {
+    "name": "median3",
+    "description": "Median of three integers x, y, z",
+    "inputs": ["x", "y", "z"],
+    "examples": [
+      [1, 2, 3, 2],
+      [3, 1, 2, 2],
+      [2, 3, 1, 2],
+      [5, 5, 5, 5],
+      [0, -1, 1, 0]
+    ],
+    "expected_solution": "(ite (< x y) (ite (< y z) y (ite (< x z) z x)) (ite (< x z) x (ite (< y z) z y)))"
+  },
+  {
+    "name": "fibonacci_step",
+    "description": "One step of Fibonacci: f(a, b) = a + b",
+    "inputs": ["x", "y"],
+    "examples": [
+      [0, 1, 1],
+      [1, 1, 2],
+      [1, 2, 3],
+      [2, 3, 5],
+      [3, 5, 8]
+    ],
+    "expected_solution": "(+ x y)"
+  },
+  {
+    "name": "double",
+    "description": "Double the input: f(x) = 2*x",
+    "inputs": ["x"],
+    "examples": [
+      [0, 0],
+      [1, 2],
+      [3, 6],
+      [-2, -4],
+      [5, 10]
+    ],
+    "expected_solution": "(+ x x)"
+  },
+  {
+    "name": "square_mod4",
+    "description": "x squared mod 4: only 0 or 1 possible for any integer",
+    "inputs": ["x"],
+    "examples": [
+      [0, 0],
+      [1, 1],
+      [2, 0],
+      [3, 1],
+      [4, 0]
+    ],
+    "expected_solution": "(mod (* x x) 4)"
+  },
+  {
+    "name": "bitand",
+    "description": "Bitwise AND of x and 1 (low bit extraction / 1-bit popcount)",
+    "inputs": ["x"],
+    "examples": [
+      [0, 0],
+      [1, 1],
+      [2, 0],
+      [3, 1],
+      [6, 0]
+    ],
+    "expected_solution": "(bitand x 1)"
+  }
+]
